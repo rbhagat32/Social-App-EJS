@@ -4,10 +4,13 @@ import { fileURLToPath } from "url";
 import cookieParser from "cookie-parser";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import dotenv from "dotenv";
 import userModel from "./models/user.js";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const JWT_SECRET_KEY = process.env.JWT_SECRET_KEY || "RAGHAV_BHAGAT";
+const JWT_EXPIRY = process.env.JWT_EXPIRY || "1m";
 
 app.set("view engine", "ejs");
 app.use(express.json());
@@ -15,54 +18,84 @@ app.use(express.urlencoded({ extended: true }));
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 app.use(express.static(path.join(__dirname, "public")));
 app.use(cookieParser());
+dotenv.config();
 
 const isLoggedIn = (req, res, next) => {
-  if (req.cookies.token === "") res.redirect("/");
-  else {
-    const token = req.cookies.token;
-    let userData = jwt.verify(token, "SECRET_KEY");
+  const token = req.cookies.token;
+
+  if (!token) return res.redirect("/");
+
+  try {
+    const userData = jwt.verify(token, JWT_SECRET_KEY);
     req.user = userData;
     next();
+  } catch (err) {
+    if (err.name === "TokenExpiredError") {
+      res.cookie("token", "");
+      return res.redirect("/");
+    } else {
+      return res.status(500).send("Authentication error");
+    }
   }
 };
 
 app.get("/", async (req, res) => {
   const token = req.cookies.token;
 
-  if (token === "") res.render("home");
-  else {
-    let { email } = jwt.verify(token, "SECRET_KEY");
+  if (!token) return res.render("home");
+
+  try {
+    const { email } = jwt.verify(token, JWT_SECRET_KEY);
     const user = await userModel.findOne({ email });
-    if (user) res.redirect("/profile");
-    else res.render("home");
+    if (user) return res.redirect("/profile");
+  } catch (err) {
+    if (err.name === "TokenExpiredError") {
+      res.cookie("token", "");
+    }
   }
+  res.render("home");
 });
 
 app.get("/login", async (req, res) => {
   const token = req.cookies.token;
 
-  if (token === "") res.render("login");
-  else {
-    let { email } = jwt.verify(token, "SECRET_KEY");
+  if (!token) return res.render("login");
+
+  try {
+    const { email } = jwt.verify(token, JWT_SECRET_KEY);
     const user = await userModel.findOne({ email });
-    if (user) res.redirect("/profile");
-    else res.render("login");
+    if (user) return res.redirect("/profile");
+  } catch (err) {
+    if (err.name === "TokenExpiredError") {
+      res.cookie("token", "");
+    }
   }
+  res.render("login");
 });
 
 app.post("/login", async (req, res) => {
-  let { email, password } = req.body;
+  const { email, password } = req.body;
 
-  let user = await userModel.findOne({ email });
-  if (!user) return res.status(500).send("User doesn't exist !");
+  try {
+    const user = await userModel.findOne({ email });
+    if (!user) return res.status(500).send("User doesn't exist!");
 
-  bcrypt.compare(password, user.password, (err, result) => {
-    if (result) {
-      let token = jwt.sign({ email: email, userId: user._id }, "SECRET_KEY");
-      res.cookie("token", token);
-      res.redirect("profile");
-    } else res.send("Incorrect password !");
-  });
+    bcrypt.compare(password, user.password, (err, result) => {
+      if (err) return res.status(500).send("Error comparing passwords");
+
+      if (result) {
+        const token = jwt.sign({ email, userId: user._id }, JWT_SECRET_KEY, {
+          expiresIn: JWT_EXPIRY,
+        });
+        res.cookie("token", token);
+        res.redirect("profile");
+      } else {
+        res.send("Incorrect password!");
+      }
+    });
+  } catch (err) {
+    res.status(500).send("Internal Server Error");
+  }
 });
 
 app.get("/logout", (req, res) => {
@@ -73,40 +106,62 @@ app.get("/logout", (req, res) => {
 app.get("/register", async (req, res) => {
   const token = req.cookies.token;
 
-  if (token === "") res.render("register");
-  else {
-    let { email } = jwt.verify(token, "SECRET_KEY");
+  if (!token) return res.render("register");
+
+  try {
+    const { email } = jwt.verify(token, JWT_SECRET_KEY);
     const user = await userModel.findOne({ email });
-    if (user) res.redirect("/profile");
-    else res.render("register");
+    if (user) return res.redirect("/profile");
+  } catch (err) {
+    if (err.name === "TokenExpiredError") {
+      res.cookie("token", "");
+    }
   }
+  res.render("register");
 });
 
 app.post("/register", async (req, res) => {
-  let { name, username, email, password } = req.body;
+  const { name, username, email, password } = req.body;
 
-  let user = await userModel.findOne({ email });
-  if (user) return res.status(500).send("Email is already registered !");
+  try {
+    const existingUser = await userModel.findOne({ email });
+    if (existingUser)
+      return res.status(500).send("Email is already registered!");
 
-  bcrypt.hash(password, 10, async (err, hash) => {
-    let user = await userModel.create({
-      name,
-      username,
-      email,
-      password: hash,
+    bcrypt.hash(password, 10, async (err, hash) => {
+      if (err) return res.status(500).send("Error hashing password");
+
+      const newUser = await userModel.create({
+        name,
+        username,
+        email,
+        password: hash,
+      });
+
+      const token = jwt.sign(
+        { email: newUser.email, userId: newUser._id },
+        JWT_SECRET_KEY,
+        {
+          expiresIn: JWT_EXPIRY,
+        }
+      );
+      res.cookie("token", token);
+      res.redirect("/profile");
     });
-
-    let token = jwt.sign({ email: email, userId: user._id }, "SECRET_KEY");
-    res.cookie("token", token);
-    res.redirect("/profile");
-  });
+  } catch (err) {
+    res.status(500).send("Internal Server Error");
+  }
 });
 
 app.get("/profile", isLoggedIn, async (req, res) => {
-  let { email } = req.user;
-  let user = await userModel.findOne({ email });
-
-  res.render("profile", { user });
+  const { email } = req.user;
+  try {
+    const user = await userModel.findOne({ email });
+    if (!user) return res.status(404).send("User not found");
+    res.render("profile", { user });
+  } catch (err) {
+    res.status(500).send("Internal Server Error");
+  }
 });
 
 app.listen(PORT, () => {
