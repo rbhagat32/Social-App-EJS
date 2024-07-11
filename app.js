@@ -10,7 +10,7 @@ import userModel from "./models/user.js";
 const app = express();
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET_KEY = process.env.JWT_SECRET_KEY || "RAGHAV_BHAGAT";
-const JWT_EXPIRY = process.env.JWT_EXPIRY || "1m";
+const JWT_EXPIRY = process.env.JWT_EXPIRY || "1h";
 
 app.set("view engine", "ejs");
 app.use(express.json());
