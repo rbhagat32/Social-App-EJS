@@ -1,7 +1,5 @@
 import mongoose from "mongoose";
 
-mongoose.connect("mongodb://127.0.0.1:27017/mini-project");
-
 const userSchema = mongoose.Schema({
   name: String,
   username: String,
@@ -14,6 +12,10 @@ const userSchema = mongoose.Schema({
     },
   ],
   image: Buffer,
+  isAdmin: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 export default mongoose.model("user", userSchema);

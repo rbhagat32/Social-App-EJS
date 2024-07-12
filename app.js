@@ -6,8 +6,11 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import sharp from "sharp";
+
+import mongoose from "./config/mongoose-connection.js";
 import userModel from "./models/user.js";
 import postModel from "./models/post.js";
+
 import upload from "./config/multer-config.js";
 
 const app = express();
@@ -40,6 +43,28 @@ const isLoggedIn = (req, res, next) => {
     } else {
       return res.status(500).send("Authentication error");
     }
+  }
+};
+
+const isMyPost = async (req, res, next) => {
+  const { id } = req.params;
+  const { userId } = req.user;
+
+  try {
+    const user = await userModel.findOne({ _id: userId });
+    if (user.isAdmin) {
+      next();
+      return;
+    }
+
+    const post = await postModel.findOne({ _id: id });
+    if (post.user.toString() === userId) {
+      next();
+    } else {
+      res.status(401).send("You are not authorized to edit this post!");
+    }
+  } catch (err) {
+    res.status(500).send("Internal Server Error");
   }
 };
 
@@ -220,7 +245,7 @@ app.get("/like/:id", isLoggedIn, async (req, res) => {
   }
 });
 
-app.get("/edit/:id", isLoggedIn, async (req, res) => {
+app.get("/edit/:id", isLoggedIn, isMyPost, async (req, res) => {
   const { id } = req.params;
   const { email } = req.user;
   try {
@@ -234,7 +259,7 @@ app.get("/edit/:id", isLoggedIn, async (req, res) => {
   }
 });
 
-app.post("/edit/:id", isLoggedIn, async (req, res) => {
+app.post("/edit/:id", isLoggedIn, isMyPost, async (req, res) => {
   const { id } = req.params;
   let { content } = req.body;
   content = content.trim();
@@ -252,7 +277,7 @@ app.post("/edit/:id", isLoggedIn, async (req, res) => {
   }
 });
 
-app.get("/delete/:id", isLoggedIn, async (req, res) => {
+app.get("/delete/:id", isLoggedIn, isMyPost, async (req, res) => {
   const { id } = req.params;
   const { userId } = req.user;
 
