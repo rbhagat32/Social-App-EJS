@@ -6,6 +6,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import userModel from "./models/user.js";
+import postModel from "./models/post.js";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -124,9 +125,13 @@ app.post("/register", async (req, res) => {
   const { name, username, email, password } = req.body;
 
   try {
-    const existingUser = await userModel.findOne({ email });
-    if (existingUser)
+    const existingEmail = await userModel.findOne({ email });
+    if (existingEmail)
       return res.status(500).send("Email is already registered!");
+
+    const existingUsername = await userModel.findOne({ username });
+    if (existingUsername)
+      return res.status(500).send("Username is already taken!");
 
     bcrypt.hash(password, 10, async (err, hash) => {
       if (err) return res.status(500).send("Error hashing password");
@@ -156,9 +161,103 @@ app.post("/register", async (req, res) => {
 app.get("/profile", isLoggedIn, async (req, res) => {
   const { email } = req.user;
   try {
+    const posts = await postModel.find().populate("user");
+    const user = await userModel.findOne({ email }).populate("posts");
+    if (!user) return res.status(404).send("User not found!");
+    res.render("profile", { user, posts });
+  } catch (err) {
+    res.status(500).send("Internal Server Error");
+  }
+});
+
+app.post("/post", isLoggedIn, async (req, res) => {
+  const { email } = req.user;
+  let { content } = req.body;
+  content = content.trim();
+  if (content === "") return res.redirect("/profile");
+
+  try {
     const user = await userModel.findOne({ email });
-    if (!user) return res.status(404).send("User not found");
-    res.render("profile", { user });
+    if (!user) return res.status(404).redirect("/");
+    let post = await postModel.create({
+      user: user._id,
+      content,
+    });
+
+    user.posts.push(post._id);
+    await user.save();
+
+    res.redirect("/profile");
+  } catch (err) {
+    res.status(500).send("Internal Server Error");
+  }
+});
+
+app.get("/like/:id", isLoggedIn, async (req, res) => {
+  const { id } = req.params;
+  const { userId } = req.user;
+
+  try {
+    const post = await postModel.findOne({ _id: id }).populate("user");
+
+    const indexOfUserInLikesArray = post.likes.indexOf(userId);
+    if (indexOfUserInLikesArray === -1) post.likes.push(userId);
+    else {
+      post.likes.splice(indexOfUserInLikesArray, 1);
+    }
+
+    await post.save();
+    res.redirect("/profile");
+  } catch (err) {
+    res.status(500).send("Internal Server Error");
+  }
+});
+
+app.get("/edit/:id", isLoggedIn, async (req, res) => {
+  const { id } = req.params;
+  const { email } = req.user;
+  try {
+    const post = await postModel.findOne({ _id: id });
+    const user = await userModel.findOne({ email }).populate("posts");
+    if (!user) return res.status(404).send("User not found!");
+
+    res.render("edit", { user, post });
+  } catch (err) {
+    res.status(500).send("Internal Server Error");
+  }
+});
+
+app.post("/edit/:id", isLoggedIn, async (req, res) => {
+  const { id } = req.params;
+  let { content } = req.body;
+  content = content.trim();
+  if (content === "") return res.redirect("/profile");
+
+  try {
+    const post = await postModel.findOne({ _id: id });
+    post.content = content;
+    post.likes.splice(0, post.likes.length);
+    await post.save();
+
+    res.redirect("/profile");
+  } catch (err) {
+    res.status(500).send("Internal Server Error");
+  }
+});
+
+app.get("/delete/:id", isLoggedIn, async (req, res) => {
+  const { id } = req.params;
+  const { userId } = req.user;
+
+  try {
+    const user = await userModel.findOne({ _id: userId });
+    const postIndexInUserKaPostsArray = user.posts.indexOf(id);
+    user.posts.splice(postIndexInUserKaPostsArray, 1);
+    user.save();
+
+    const post = await postModel.findOneAndDelete({ _id: id });
+
+    res.redirect("/profile");
   } catch (err) {
     res.status(500).send("Internal Server Error");
   }

@@ -2,7 +2,7 @@ body {
   background-color: rgb(24 24 27);
   color: white;
   font-family: "Gilroy";
-  cursor: default;
+  /* cursor: default; */
 }
 
 body::-webkit-scrollbar {
