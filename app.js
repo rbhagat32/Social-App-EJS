@@ -5,6 +5,7 @@ import cookieParser from "cookie-parser";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
+import sharp from "sharp";
 import userModel from "./models/user.js";
 import postModel from "./models/post.js";
 import upload from "./config/multer-config.js";
@@ -125,11 +126,9 @@ app.get("/register", async (req, res) => {
 
 app.post("/register", upload.single("image"), async (req, res) => {
   const { name, username, email, password } = req.body;
-
-  let image = "";
-  if (req.file && req.file.buffer) {
-    image = req.file.buffer.toString("base64");
-  }
+  let image = req.file
+    ? await sharp(req.file.buffer).resize(1000, 1000).png().toBuffer()
+    : Buffer.alloc(0);
 
   try {
     const existingEmail = await userModel.findOne({ email });

@@ -13,7 +13,7 @@ const userSchema = mongoose.Schema({
       ref: "post",
     },
   ],
-  image: String,
+  image: Buffer,
 });
 
 export default mongoose.model("user", userSchema);
