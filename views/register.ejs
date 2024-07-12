@@ -12,7 +12,12 @@
     <div class="container mx-auto px-4 py-10 w-full min-h-screen">
       <h1 class="text-4xl mb-6">Register :</h1>
 
-      <form method="post" action="/register" class="flex flex-col gap-2 w-80">
+      <form
+        method="post"
+        action="/register"
+        enctype="multipart/form-data"
+        class="flex flex-col gap-2 w-80"
+      >
         <input
           required
           name="name"
@@ -40,6 +45,18 @@
           type="password"
           placeholder="password"
           class="outline-none bg-transparent px-3 py-1 rounded-md border border-zinc-400"
+        />
+
+        <label
+          for="imageUpload"
+          class="bg-blue-500 hover:bg-blue-600 px-4 py-2 w-fit rounded-md mt-2 font-semibold cursor-pointer"
+          >Upload Profile Picture</label
+        >
+        <input
+          id="imageUpload"
+          type="file"
+          name="image"
+          class="hidden outline-none bg-transparent cursor-pointer"
         />
         <input
           type="submit"

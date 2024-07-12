@@ -7,8 +7,11 @@ import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import userModel from "./models/user.js";
 import postModel from "./models/post.js";
+import upload from "./config/multer-config.js";
 
 const app = express();
+
+dotenv.config();
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET_KEY = process.env.JWT_SECRET_KEY || "RAGHAV_BHAGAT";
 const JWT_EXPIRY = process.env.JWT_EXPIRY || "1h";
@@ -19,7 +22,6 @@ app.use(express.urlencoded({ extended: true }));
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 app.use(express.static(path.join(__dirname, "public")));
 app.use(cookieParser());
-dotenv.config();
 
 const isLoggedIn = (req, res, next) => {
   const token = req.cookies.token;
@@ -121,8 +123,13 @@ app.get("/register", async (req, res) => {
   res.render("register");
 });
 
-app.post("/register", async (req, res) => {
+app.post("/register", upload.single("image"), async (req, res) => {
   const { name, username, email, password } = req.body;
+
+  let image = "";
+  if (req.file && req.file.buffer) {
+    image = req.file.buffer.toString("base64");
+  }
 
   try {
     const existingEmail = await userModel.findOne({ email });
@@ -141,6 +148,7 @@ app.post("/register", async (req, res) => {
         username,
         email,
         password: hash,
+        image,
       });
 
       const token = jwt.sign(
