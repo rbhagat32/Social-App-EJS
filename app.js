@@ -76,7 +76,7 @@ app.get("/", async (req, res) => {
   try {
     const { email } = jwt.verify(token, JWT_SECRET_KEY);
     const user = await userModel.findOne({ email });
-    if (user) return res.redirect("/profile");
+    if (user) return res.redirect("/feed");
   } catch (err) {
     if (err.name === "TokenExpiredError") {
       res.cookie("token", "");
@@ -93,7 +93,7 @@ app.get("/login", async (req, res) => {
   try {
     const { email } = jwt.verify(token, JWT_SECRET_KEY);
     const user = await userModel.findOne({ email });
-    if (user) return res.redirect("/profile");
+    if (user) return res.redirect("/feed");
   } catch (err) {
     if (err.name === "TokenExpiredError") {
       res.cookie("token", "");
@@ -117,7 +117,7 @@ app.post("/login", async (req, res) => {
           expiresIn: JWT_EXPIRY,
         });
         res.cookie("token", token);
-        res.redirect("profile");
+        res.redirect("feed");
       } else {
         res.send("Incorrect password!");
       }
@@ -140,7 +140,7 @@ app.get("/register", async (req, res) => {
   try {
     const { email } = jwt.verify(token, JWT_SECRET_KEY);
     const user = await userModel.findOne({ email });
-    if (user) return res.redirect("/profile");
+    if (user) return res.redirect("/feed");
   } catch (err) {
     if (err.name === "TokenExpiredError") {
       res.cookie("token", "");
@@ -152,7 +152,7 @@ app.get("/register", async (req, res) => {
 app.post("/register", upload.single("image"), async (req, res) => {
   const { name, username, email, password } = req.body;
   let image = req.file
-    ? await sharp(req.file.buffer).resize(1000, 1000).png().toBuffer()
+    ? await sharp(req.file.buffer).resize(400, 400).png().toBuffer()
     : Buffer.alloc(0);
 
   try {
@@ -183,30 +183,35 @@ app.post("/register", upload.single("image"), async (req, res) => {
         }
       );
       res.cookie("token", token);
-      res.redirect("/profile");
+      res.redirect("/feed");
     });
   } catch (err) {
     res.status(500).send("Internal Server Error");
   }
 });
 
-app.get("/profile", isLoggedIn, async (req, res) => {
+app.get("/feed", isLoggedIn, async (req, res) => {
   const { email } = req.user;
   try {
     const posts = await postModel.find().populate("user");
     const user = await userModel.findOne({ email }).populate("posts");
     if (!user) return res.status(404).send("User not found!");
-    res.render("profile", { user, posts });
+    res.render("feed", { user, posts });
   } catch (err) {
     res.status(500).send("Internal Server Error");
   }
 });
 
-app.post("/post", isLoggedIn, async (req, res) => {
+app.post("/post", isLoggedIn, upload.single("image"), async (req, res) => {
   const { email } = req.user;
+
   let { content } = req.body;
   content = content.trim();
-  if (content === "") return res.redirect("/profile");
+  if (content === "") return res.redirect("/feed");
+
+  let image = req.file
+    ? await sharp(req.file.buffer).resize(1000, 1000).png().toBuffer()
+    : Buffer.alloc(0);
 
   try {
     const user = await userModel.findOne({ email });
@@ -214,12 +219,13 @@ app.post("/post", isLoggedIn, async (req, res) => {
     let post = await postModel.create({
       user: user._id,
       content,
+      image,
     });
 
     user.posts.push(post._id);
     await user.save();
 
-    res.redirect("/profile");
+    res.redirect("/feed");
   } catch (err) {
     res.status(500).send("Internal Server Error");
   }
@@ -239,7 +245,7 @@ app.get("/like/:id", isLoggedIn, async (req, res) => {
     }
 
     await post.save();
-    res.redirect("/profile");
+    res.redirect("/feed");
   } catch (err) {
     res.status(500).send("Internal Server Error");
   }
@@ -263,7 +269,7 @@ app.post("/edit/:id", isLoggedIn, isMyPost, async (req, res) => {
   const { id } = req.params;
   let { content } = req.body;
   content = content.trim();
-  if (content === "") return res.redirect("/profile");
+  if (content === "") return res.redirect("/feed");
 
   try {
     const post = await postModel.findOne({ _id: id });
@@ -271,7 +277,7 @@ app.post("/edit/:id", isLoggedIn, isMyPost, async (req, res) => {
     post.likes.splice(0, post.likes.length);
     await post.save();
 
-    res.redirect("/profile");
+    res.redirect("/feed");
   } catch (err) {
     res.status(500).send("Internal Server Error");
   }
@@ -289,7 +295,7 @@ app.get("/delete/:id", isLoggedIn, isMyPost, async (req, res) => {
 
     const post = await postModel.findOneAndDelete({ _id: id });
 
-    res.redirect("/profile");
+    res.redirect("/feed");
   } catch (err) {
     res.status(500).send("Internal Server Error");
   }
