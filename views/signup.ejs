@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Register</title>
+    <title>Sign Up</title>
     <link rel="icon" href="/images/logo.png" />
     <link rel="stylesheet" href="/styles/styles.css" />
     <script src="https://cdn.tailwindcss.com"></script>
@@ -12,11 +12,11 @@
     <div
       class="bg-zinc-900 container mx-auto px-4 py-10 w-full min-h-screen max-w-screen-sm flex flex-col items-center border border-zinc-800"
     >
-      <h1 class="text-4xl mb-6">Create New Account :</h1>
+      <h1 class="text-4xl mb-6">Sign Up :</h1>
 
       <form
         method="post"
-        action="/register"
+        action="/signup"
         enctype="multipart/form-data"
         class="flex flex-col gap-2 w-80"
       >
@@ -49,10 +49,11 @@
           class="outline-none bg-transparent px-3 py-1 rounded-md border border-zinc-400"
         />
 
-        <div class="flex justify-between mt-2">
+        <div class="flex justify-between items-center mt-2">
           <label
+            id="imageUploadLabel"
             for="imageUpload"
-            class="border text-blue-400 hover:text-blue-500 border-blue-400 hover:border-blue-500 px-4 py-2 w-fit rounded-md text-sm cursor-pointer"
+            class="border text-blue-400 hover:text-blue-500 border-blue-400 hover:border-blue-500 px-4 py-[7px] w-fit rounded-md cursor-pointer"
             >Upload Profile Picture</label
           >
           <input
@@ -63,7 +64,7 @@
           />
           <input
             type="submit"
-            value="Create"
+            value="Sign Up"
             class="bg-green-600 hover:bg-green-700 px-4 py-2 w-fit rounded-md font-semibold cursor-pointer"
           />
         </div>

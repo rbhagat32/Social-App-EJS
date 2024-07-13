@@ -9,7 +9,10 @@ const postSchema = mongoose.Schema({
     type: Date,
     default: Date.now,
   },
-  content: String,
+  content: {
+    type: String,
+    default: "",
+  },
   likes: [{ type: mongoose.Schema.Types.ObjectId, ref: "user" }],
   image: Buffer,
   editted: {

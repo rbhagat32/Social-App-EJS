@@ -86,10 +86,10 @@ app.get("/", async (req, res) => {
   res.render("home");
 });
 
-app.get("/register", async (req, res) => {
+app.get("/signup", async (req, res) => {
   const token = req.cookies.token;
 
-  if (!token) return res.render("register");
+  if (!token) return res.render("signup");
 
   try {
     const { email } = jwt.verify(token, JWT_SECRET_KEY);
@@ -100,10 +100,10 @@ app.get("/register", async (req, res) => {
       res.cookie("token", "");
     }
   }
-  res.render("register");
+  res.render("signup");
 });
 
-app.post("/register", upload.single("image"), async (req, res) => {
+app.post("/signup", upload.single("image"), async (req, res) => {
   const { name, username, email, password } = req.body;
   let image = req.file
     ? await sharp(req.file.buffer).resize(50, 50).png().toBuffer()
@@ -112,7 +112,7 @@ app.post("/register", upload.single("image"), async (req, res) => {
   try {
     const existingEmail = await userModel.findOne({ email });
     if (existingEmail)
-      return res.status(500).send("Email is already registered!");
+      return res.status(500).send("Email is already signuped!");
 
     const existingUsername = await userModel.findOne({ username });
     if (existingUsername)
@@ -210,11 +210,13 @@ app.post("/post", isLoggedIn, upload.single("image"), async (req, res) => {
 
   let { content } = req.body;
   content = content.trim();
-  if (content === "") return res.redirect("/feed");
 
   let image = req.file
     ? await sharp(req.file.buffer).resize(600, 600).png().toBuffer()
     : Buffer.alloc(0);
+
+  if (content === "" && image.toString("base64") === "")
+    return res.redirect("/feed");
 
   try {
     const user = await userModel.findOne({ email });

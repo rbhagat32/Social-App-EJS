@@ -24,7 +24,7 @@
           </div>
           <h1 class="h-fit block text-4xl"><%= user.name.split(" ")[0] %></h1>
           <% if (user.isVerified) { %>
-          <div class="w-4 h-4 mb-2">
+          <div class="w-4 h-4 mb-2.5">
             <img src="/images/verified.png" />
           </div>
           <% } %>
@@ -44,15 +44,15 @@
           class="flex flex-col gap-2"
         >
           <textarea
-            required
             name="content"
             placeholder="What's on your mind ?"
             class="text-justify w-full resize-none outline-none bg-transparent px-4 py-3 rounded-md border border-zinc-400"
           ></textarea>
-          <div class="flex gap-4 items-center justify-between">
+          <div class="flex gap-4 items-center justify-between mt-2">
             <label
+              id="imageUploadLabel"
               for="imageUpload"
-              class="border text-blue-400 hover:text-blue-500 border-blue-400 hover:border-blue-500 px-4 py-[7px] w-fit rounded-md mt-2 cursor-pointer"
+              class="border text-blue-400 hover:text-blue-500 border-blue-400 hover:border-blue-500 px-4 py-[7px] w-fit rounded-md cursor-pointer"
               >Upload Image</label
             >
             <input
@@ -64,7 +64,7 @@
             <input
               type="submit"
               value="Create Post"
-              class="bg-blue-500 hover:bg-blue-600 px-4 py-2 w-fit rounded-md mt-2 font-semibold cursor-pointer"
+              class="bg-blue-500 hover:bg-blue-600 px-4 py-2 w-fit rounded-md font-semibold cursor-pointer"
             />
           </div>
         </form>
