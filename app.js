@@ -6,6 +6,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import sharp from "sharp";
+import moment from "moment";
 
 import mongoose from "./config/mongoose-connection.js";
 import userModel from "./models/user.js";
@@ -85,6 +86,64 @@ app.get("/", async (req, res) => {
   res.render("home");
 });
 
+app.get("/register", async (req, res) => {
+  const token = req.cookies.token;
+
+  if (!token) return res.render("register");
+
+  try {
+    const { email } = jwt.verify(token, JWT_SECRET_KEY);
+    const user = await userModel.findOne({ email });
+    if (user) return res.redirect("/feed");
+  } catch (err) {
+    if (err.name === "TokenExpiredError") {
+      res.cookie("token", "");
+    }
+  }
+  res.render("register");
+});
+
+app.post("/register", upload.single("image"), async (req, res) => {
+  const { name, username, email, password } = req.body;
+  let image = req.file
+    ? await sharp(req.file.buffer).resize(50, 50).png().toBuffer()
+    : Buffer.alloc(0);
+
+  try {
+    const existingEmail = await userModel.findOne({ email });
+    if (existingEmail)
+      return res.status(500).send("Email is already registered!");
+
+    const existingUsername = await userModel.findOne({ username });
+    if (existingUsername)
+      return res.status(500).send("Username is already taken!");
+
+    bcrypt.hash(password, 10, async (err, hash) => {
+      if (err) return res.status(500).send("Error hashing password");
+
+      const newUser = await userModel.create({
+        name,
+        username,
+        email,
+        password: hash,
+        image,
+      });
+
+      const token = jwt.sign(
+        { email: newUser.email, userId: newUser._id },
+        JWT_SECRET_KEY,
+        {
+          expiresIn: JWT_EXPIRY,
+        }
+      );
+      res.cookie("token", token);
+      res.redirect("/feed");
+    });
+  } catch (err) {
+    res.status(500).send("Internal Server Error");
+  }
+});
+
 app.get("/login", async (req, res) => {
   const token = req.cookies.token;
 
@@ -132,71 +191,15 @@ app.get("/logout", (req, res) => {
   res.redirect("/");
 });
 
-app.get("/register", async (req, res) => {
-  const token = req.cookies.token;
-
-  if (!token) return res.render("register");
-
-  try {
-    const { email } = jwt.verify(token, JWT_SECRET_KEY);
-    const user = await userModel.findOne({ email });
-    if (user) return res.redirect("/feed");
-  } catch (err) {
-    if (err.name === "TokenExpiredError") {
-      res.cookie("token", "");
-    }
-  }
-  res.render("register");
-});
-
-app.post("/register", upload.single("image"), async (req, res) => {
-  const { name, username, email, password } = req.body;
-  let image = req.file
-    ? await sharp(req.file.buffer).resize(400, 400).png().toBuffer()
-    : Buffer.alloc(0);
-
-  try {
-    const existingEmail = await userModel.findOne({ email });
-    if (existingEmail)
-      return res.status(500).send("Email is already registered!");
-
-    const existingUsername = await userModel.findOne({ username });
-    if (existingUsername)
-      return res.status(500).send("Username is already taken!");
-
-    bcrypt.hash(password, 10, async (err, hash) => {
-      if (err) return res.status(500).send("Error hashing password");
-
-      const newUser = await userModel.create({
-        name,
-        username,
-        email,
-        password: hash,
-        image,
-      });
-
-      const token = jwt.sign(
-        { email: newUser.email, userId: newUser._id },
-        JWT_SECRET_KEY,
-        {
-          expiresIn: JWT_EXPIRY,
-        }
-      );
-      res.cookie("token", token);
-      res.redirect("/feed");
-    });
-  } catch (err) {
-    res.status(500).send("Internal Server Error");
-  }
-});
-
 app.get("/feed", isLoggedIn, async (req, res) => {
   const { email } = req.user;
   try {
     const posts = await postModel.find().populate("user");
-    const user = await userModel.findOne({ email }).populate("posts");
+
+    const user = await userModel.findOne({ email });
     if (!user) return res.status(404).send("User not found!");
-    res.render("feed", { user, posts });
+
+    res.render("feed", { user, posts, moment });
   } catch (err) {
     res.status(500).send("Internal Server Error");
   }
@@ -210,7 +213,7 @@ app.post("/post", isLoggedIn, upload.single("image"), async (req, res) => {
   if (content === "") return res.redirect("/feed");
 
   let image = req.file
-    ? await sharp(req.file.buffer).resize(1000, 1000).png().toBuffer()
+    ? await sharp(req.file.buffer).resize(600, 600).png().toBuffer()
     : Buffer.alloc(0);
 
   try {
@@ -274,6 +277,8 @@ app.post("/edit/:id", isLoggedIn, isMyPost, async (req, res) => {
   try {
     const post = await postModel.findOne({ _id: id });
     post.content = content;
+    post.date = Date.now();
+    post.editted = true;
     post.likes.splice(0, post.likes.length);
     await post.save();
 

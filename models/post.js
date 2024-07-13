@@ -6,23 +6,16 @@ const postSchema = mongoose.Schema({
     ref: "user",
   },
   date: {
-    type: String,
-    default: () => {
-      const now = new Date();
-      const day = String(now.getDate()).padStart(2, "0");
-      const month = String(now.getMonth() + 1).padStart(2, "0");
-      const year = now.getFullYear();
-      const hours = now.getHours();
-      const minutes = String(now.getMinutes()).padStart(2, "0");
-      const period = hours >= 12 ? "PM" : "AM";
-      const formattedHours = hours % 12 || 12;
-
-      return `${day}-${month}-${year} ${formattedHours}:${minutes} ${period}`;
-    },
+    type: Date,
+    default: Date.now,
   },
   content: String,
   likes: [{ type: mongoose.Schema.Types.ObjectId, ref: "user" }],
   image: Buffer,
+  editted: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 export default mongoose.model("post", postSchema);

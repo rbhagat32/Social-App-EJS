@@ -3,23 +3,35 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Profile</title>
+    <title>Feed</title>
     <link rel="icon" href="/images/logo.png" />
     <link rel="stylesheet" href="/styles/styles.css" />
     <script src="https://cdn.tailwindcss.com"></script>
   </head>
   <body>
-    <div class="container relative mx-auto px-4 py-10 w-full min-h-screen">
-      <div id="header" class="flex justify-between items-start">
-        <h1 class="text-3xl sm:text-4xl mb-6">
-          <span class="text-zinc-400 font-light text-sm sm:text-xl"
-            >Welcome,</span
-          >
-          <%= user.name.split(" ")[0] %>👋
-        </h1>
+    <div
+      class="bg-zinc-900 rounded-md container max-w-screen-sm relative mx-auto px-4 py-10 w-full min-h-screen border border-zinc-800"
+    >
+      <div id="header" class="flex justify-between items-center">
+        <div class="flex gap-2 items-end">
+          <div class="bg-red-200 w-10 h-10 rounded-full overflow-hidden">
+            <img
+              class="w-full h-full object-cover object-top"
+              src="<%= user.image.toString('base64') !== '' ? 
+        'data:image/png;base64,' + user.image.toString('base64') : 
+        '/images/placeholder.png' %>"
+            />
+          </div>
+          <h1 class="h-fit block text-4xl"><%= user.name.split(" ")[0] %></h1>
+          <% if (user.isVerified) { %>
+          <div class="w-4 h-4 mb-2">
+            <img src="/images/verified.png" />
+          </div>
+          <% } %>
+        </div>
         <a
           href="/logout"
-          class="block relative -top-2 sm:-top-1 bg-red-500 hover:bg-red-600 text-sm sm:text-md px-4 py-2 w-fit rounded-md mt-2 font-semibold cursor-pointer"
+          class="block relative bg-red-500 hover:bg-red-600 text-sm sm:text-md px-4 py-2 w-fit rounded-md font-semibold cursor-pointer"
           >Logout</a
         >
       </div>
@@ -35,12 +47,12 @@
             required
             name="content"
             placeholder="What's on your mind ?"
-            class="text-justify w-full max-w-[600px] resize-none outline-none bg-transparent px-4 py-3 rounded-md border border-zinc-400"
+            class="text-justify w-full resize-none outline-none bg-transparent px-4 py-3 rounded-md border border-zinc-400"
           ></textarea>
-          <div class="flex gap-4 items-center">
+          <div class="flex gap-4 items-center justify-between">
             <label
               for="imageUpload"
-              class="border text-blue-400 hover:text-blue-500 border-blue-400 hover:border-blue-500 px-4 py-[7px] w-fit rounded-md mt-2 font-semibold cursor-pointer"
+              class="border text-blue-400 hover:text-blue-500 border-blue-400 hover:border-blue-500 px-4 py-[7px] w-fit rounded-md mt-2 cursor-pointer"
               >Upload Image</label
             >
             <input
@@ -59,18 +71,19 @@
       </div>
 
       <div id="posts" class="mt-20 flex flex-col gap-3">
-        <h3 class="text-zinc-400 font-light text-lg sm:text-xl">
-          Your Posts :
-        </h3>
+        <h3 class="text-zinc-400 font-light text-lg sm:text-xl">Posts :</h3>
 
-        <% posts.reverse().forEach((post)=>{ %>
+        <% posts.reverse().forEach((post,index)=>{ %>
         <div
           id="single-post"
-          class="text-justify max-w-[600px] outline-none bg-zinc-800 px-4 py-3 rounded-md border border-zinc-400"
+          class="text-justify outline-none bg-zinc-800 px-4 py-3 rounded-md border border-zinc-400"
         >
           <div id="header" class="mb-4 flex justify-between items-end">
             <div class="flex items-end gap-2 sm:gap-3">
-              <div class="w-9 h-9 overflow-hidden rounded-full">
+              <div
+                id="profile-picture"
+                class="w-9 h-9 overflow-hidden rounded-full"
+              >
                 <img
                   class="w-full h-full object-cover object-top"
                   src="<%= post.user.image.toString('base64') !== '' ? 
@@ -101,7 +114,7 @@
             />
             <% } %>
 
-            <p><%= post.content %></p>
+            <p class="text-lg"><%= post.content %></p>
           </div>
 
           <div class="flex justify-between">
@@ -116,7 +129,14 @@
               <% } %>
             </div>
 
-            <p class="text-zinc-400 text-sm"><%= post.date %></p>
+            <div class="flex gap-1">
+              <% if (post.editted) { %>
+              <p class="text-zinc-400 text-sm">(editted)</p>
+              <% } %>
+              <p class="text-zinc-400 text-sm">
+                <%= moment(post.date).fromNow() %>
+              </p>
+            </div>
           </div>
         </div>
         <% }) %>
