@@ -106,7 +106,7 @@ app.get("/signup", async (req, res) => {
 app.post("/signup", upload.single("image"), async (req, res) => {
   const { name, username, email, password } = req.body;
   let image = req.file
-    ? await sharp(req.file.buffer).resize(50, 50).png().toBuffer()
+    ? await sharp(req.file.buffer).resize(200, 200).png().toBuffer()
     : Buffer.alloc(0);
 
   try {
@@ -205,6 +205,54 @@ app.get("/feed", isLoggedIn, async (req, res) => {
   }
 });
 
+app.get("/profile", isLoggedIn, async (req, res) => {
+  const { email } = req.user;
+  try {
+    const user = await userModel.findOne({ email }).populate("posts");
+    if (!user) return res.status(404).send("User not found!");
+
+    res.render("profile", { user, moment });
+  } catch (err) {
+    res.status(500).send("Internal Server Error");
+  }
+});
+
+app.post("/profile", isLoggedIn, upload.single("image"), async (req, res) => {
+  const { email } = req.user;
+
+  let image = req.file
+    ? await sharp(req.file.buffer).resize(200, 200).png().toBuffer()
+    : Buffer.alloc(0);
+
+  try {
+    const user = await userModel.findOne({ email });
+    if (!user) return res.status(404).send("User not found!");
+
+    user.image = image;
+    user.save();
+
+    res.redirect("/profile");
+  } catch (error) {
+    res.status(500).send("Internal Server Error");
+  }
+});
+
+app.post("/remove-profile-picture", isLoggedIn, async (req, res) => {
+  const { email } = req.user;
+
+  try {
+    const user = await userModel.findOne({ email });
+    if (!user) return res.status(404).send("User not found!");
+
+    user.image = Buffer.alloc(0);
+    user.save();
+
+    res.redirect("/profile");
+  } catch (error) {
+    res.status(500).send("Internal Server Error");
+  }
+});
+
 app.post("/post", isLoggedIn, upload.single("image"), async (req, res) => {
   const { email } = req.user;
 
@@ -274,7 +322,7 @@ app.post("/edit/:id", isLoggedIn, isMyPost, async (req, res) => {
   const { id } = req.params;
   let { content } = req.body;
   content = content.trim();
-  if (content === "") return res.redirect("/feed");
+  if (content === "") return res.redirect("/profile");
 
   try {
     const post = await postModel.findOne({ _id: id });
@@ -284,7 +332,7 @@ app.post("/edit/:id", isLoggedIn, isMyPost, async (req, res) => {
     post.likes.splice(0, post.likes.length);
     await post.save();
 
-    res.redirect("/feed");
+    res.redirect("/profile");
   } catch (err) {
     res.status(500).send("Internal Server Error");
   }
@@ -302,7 +350,7 @@ app.get("/delete/:id", isLoggedIn, isMyPost, async (req, res) => {
 
     const post = await postModel.findOneAndDelete({ _id: id });
 
-    res.redirect("/feed");
+    res.redirect("/profile");
   } catch (err) {
     res.status(500).send("Internal Server Error");
   }
