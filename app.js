@@ -194,7 +194,7 @@ app.get("/logout", (req, res) => {
 app.get("/feed", isLoggedIn, async (req, res) => {
   const { email } = req.user;
   try {
-    const posts = await postModel.find().populate("user");
+    const posts = await postModel.find().sort({ date: -1 }).populate("user");
 
     const user = await userModel.findOne({ email });
     if (!user) return res.status(404).send("User not found!");
@@ -211,7 +211,9 @@ app.get("/profile", isLoggedIn, async (req, res) => {
     const user = await userModel.findOne({ email }).populate("posts");
     if (!user) return res.status(404).send("User not found!");
 
-    res.render("profile", { user, moment });
+    const posts = await postModel.find({ user: user._id }).sort({ date: -1 });
+
+    res.render("profile", { user, posts, moment });
   } catch (err) {
     res.status(500).send("Internal Server Error");
   }
