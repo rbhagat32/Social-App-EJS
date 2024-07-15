@@ -136,7 +136,11 @@ app.post("/signup", upload.single("image"), async (req, res) => {
           expiresIn: JWT_EXPIRY,
         }
       );
-      res.cookie("token", token);
+      res.cookie("token", token, {
+        httpOnly: true,
+        sameSite: "strict",
+        expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7), // expires after 1 week
+      });
       res.redirect("/feed");
     });
   } catch (err) {
@@ -175,7 +179,11 @@ app.post("/login", async (req, res) => {
         const token = jwt.sign({ email, userId: user._id }, JWT_SECRET_KEY, {
           expiresIn: JWT_EXPIRY,
         });
-        res.cookie("token", token);
+        res.cookie("token", token, {
+          httpOnly: true,
+          sameSite: "strict",
+          expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7), // expires after 1 week
+        });
         res.redirect("feed");
       } else {
         res.send("Incorrect password!");

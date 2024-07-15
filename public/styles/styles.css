@@ -1,9 +1,21 @@
+@font-face {
+  font-family: "Gilroy-Light";
+  src: url(../fonts/Gilroy-Light.woff);
+}
+
+@font-face {
+  font-family: "Gilroy-Bold";
+  src: url(../fonts/Gilroy-Bold.woff);
+}
+
 body {
   background-color: rgb(24 24 27);
-  /* background-color: rgb(23 23 23); */
   color: white;
-  font-family: "Gilroy";
-  /* cursor: default; */
+  font-family: "Gilroy-Light", sans-serif;
+}
+
+.font-semibold {
+  font-family: "Gilroy-Bold", sans-serif;
 }
 
 ::-webkit-scrollbar {
