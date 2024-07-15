@@ -247,6 +247,25 @@ app.post("/profile", isLoggedIn, upload.single("image"), async (req, res) => {
   }
 });
 
+app.get("/delete-account", isLoggedIn, async (req, res) => {
+  const { email } = req.user;
+
+  try {
+    const user = await userModel.findOne({
+      email,
+    });
+    if (!user) return res.status(404).send("User not found!");
+
+    await postModel.deleteMany({ user: user._id });
+    await userModel.findOneAndDelete({ email });
+
+    res.cookie("token", "");
+    res.redirect("/");
+  } catch (err) {
+    res.status(500).send("Internal Server Error");
+  }
+});
+
 app.post("/post", isLoggedIn, upload.single("image"), async (req, res) => {
   const { email } = req.user;
 
