@@ -47,51 +47,6 @@
         </div>
       </div>
 
-      <div class="flex flex-col items-center mt-6">
-        <form
-          method="post"
-          action="/profile"
-          enctype="multipart/form-data"
-          class="w-full flex flex-col"
-        >
-          <div class="flex justify-center gap-10 items-center">
-            <label
-              id="imageUploadLabel"
-              for="imageUpload"
-              class="block border text-blue-400 hover:text-blue-500 border-blue-400 hover:border-blue-500 px-4 py-[7px] w-fit rounded-md cursor-pointer"
-              >Change Profile Picture</label
-            >
-            <input
-              required
-              id="imageUpload"
-              type="file"
-              accept="image/*"
-              name="image"
-              class="hidden outline-none bg-transparent cursor-pointer"
-            />
-            <input
-              type="submit"
-              value="Submit"
-              class="block bg-blue-500 hover:bg-blue-600 px-4 py-2 w-fit rounded-md font-semibold cursor-pointer"
-            />
-          </div>
-        </form>
-
-        <h1 class="text-zinc-400 my-3">OR</h1>
-
-        <form
-          method="post"
-          action="/remove-profile-picture"
-          class="w-full flex flex-col items-center"
-        >
-          <input
-            type="submit"
-            value="Remove Profile Picture"
-            class="block border text-red-400 hover:text-red-500 border-red-400 hover:border-red-500 border-blue-400 hover:border-blue-500 px-4 py-2 w-fit rounded-md cursor-pointer"
-          />
-        </form>
-      </div>
-
       <div id="posts" class="mt-12 flex flex-col gap-3">
         <h3 class="text-zinc-400 font-light text-lg sm:text-xl">My Posts :</h3>
 
@@ -121,7 +76,7 @@
               </h3>
             </div>
             <p class="mb-1">
-              <% if (post.likes.indexOf(user._id) === -1) { %> 🤍 <%=
+              <% if (post.likes.indexOf(loggedInUser._id) === -1) { %> 🤍 <%=
               post.likes.length %> <% } else { %> ❤️ <%= post.likes.length %> <%
               } %>
             </p>
@@ -141,11 +96,13 @@
           <div class="flex justify-between">
             <div class="flex gap-3">
               <a href="/like/<%= post._id %>" class="text-blue-400"
-                ><%= post.likes.indexOf(user._id) === -1 ? "Like" : "Unlike"
-                %></a
+                ><%= post.likes.indexOf(loggedInUser._id) === -1 ? "Like" :
+                "Unlike" %></a
               >
+              <% if (loggedInUser.isAdmin) { %>
               <a href="/edit/<%= post._id %>" class="text-zinc-400">Edit</a>
               <a href="/delete/<%= post._id %>" class="text-red-400">Delete</a>
+              <% } %>
             </div>
 
             <div class="flex gap-1">

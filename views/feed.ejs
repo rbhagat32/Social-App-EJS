@@ -88,24 +88,28 @@
         >
           <div id="header" class="mb-4 flex justify-between items-end">
             <div class="flex items-end gap-2 sm:gap-3">
-              <div
-                id="profile-picture"
-                class="w-9 h-9 overflow-hidden rounded-full"
-              >
-                <img
-                  class="w-full h-full object-cover object-top"
-                  src="<%= post.user.image.toString('base64') !== '' ? 
+              <a href="/user-profile/<%= post.user._id %>">
+                <div
+                  id="profile-picture"
+                  class="w-9 h-9 overflow-hidden rounded-full"
+                >
+                  <img
+                    class="w-full h-full object-cover object-top"
+                    src="<%= post.user.image.toString('base64') !== '' ? 
            `data:image/png;base64,${post.user.image.toString('base64')}` : 
            '/images/placeholder.png' %>"
-                />
-              </div>
-              <h3 class="text-lg text-blue-400 mb-1 flex gap-1 items-center">
-                @<%= post.user.username %> <% if (post.user.isVerified) { %>
-                <div class="w-3 h-3 mt-[1px]">
-                  <img src="/images/verified.png" />
+                  />
                 </div>
-                <% } %>
-              </h3>
+              </a>
+              <a href="/user-profile/<%= post.user._id %>">
+                <h3 class="text-lg text-blue-400 mb-1 flex gap-1 items-center">
+                  @<%= post.user.username %> <% if (post.user.isVerified) { %>
+                  <div class="w-3 h-3 mt-[1px]">
+                    <img src="/images/verified.png" />
+                  </div>
+                  <% } %>
+                </h3>
+              </a>
             </div>
             <p class="mb-1">
               <% if (post.likes.indexOf(user._id) === -1) { %> 🤍 <%=

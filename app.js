@@ -247,6 +247,26 @@ app.post("/profile", isLoggedIn, upload.single("image"), async (req, res) => {
   }
 });
 
+app.get("/user-profile/:id", isLoggedIn, async (req, res) => {
+  const { id } = req.params;
+  const { email } = req.user;
+
+  try {
+    const user = await userModel.findOne({ _id: id });
+    if (!user) return res.status(404).send("User not found!");
+
+    const posts = await postModel.find({ user: user._id }).sort({ date: -1 });
+
+    const loggedInUser = await userModel.findOne({ email });
+    if (!loggedInUser) return res.status(404).send("User not found!");
+
+    if (user.email === loggedInUser.email) res.redirect("/profile");
+    else res.render("user-profile", { user, loggedInUser, posts, moment });
+  } catch (error) {
+    res.status(500).send("Internal Server Error");
+  }
+});
+
 app.get("/delete-account", isLoggedIn, async (req, res) => {
   const { email } = req.user;
 
@@ -311,7 +331,8 @@ app.get("/like/:id", isLoggedIn, async (req, res) => {
     }
 
     await post.save();
-    res.redirect("/feed");
+    // res.redirect("/feed");
+    res.redirect(req.get("Referer"));
   } catch (err) {
     res.status(500).send("Internal Server Error");
   }
