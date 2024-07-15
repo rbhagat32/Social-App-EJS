@@ -17,9 +17,9 @@ import upload from "./config/multer-config.js";
 const app = express();
 
 dotenv.config();
-const PORT = process.env.PORT || 3000;
-const JWT_SECRET_KEY = process.env.JWT_SECRET_KEY || "RAGHAV_BHAGAT";
-const JWT_EXPIRY = process.env.JWT_EXPIRY || "1h";
+const PORT = process.env.PORT;
+const JWT_SECRET_KEY = process.env.JWT_SECRET_KEY;
+const JWT_EXPIRY = process.env.JWT_EXPIRY;
 
 app.set("view engine", "ejs");
 app.use(express.json());
@@ -239,22 +239,6 @@ app.post("/profile", isLoggedIn, upload.single("image"), async (req, res) => {
   }
 });
 
-app.post("/remove-profile-picture", isLoggedIn, async (req, res) => {
-  const { email } = req.user;
-
-  try {
-    const user = await userModel.findOne({ email });
-    if (!user) return res.status(404).send("User not found!");
-
-    user.image = Buffer.alloc(0);
-    user.save();
-
-    res.redirect("/profile");
-  } catch (error) {
-    res.status(500).send("Internal Server Error");
-  }
-});
-
 app.post("/post", isLoggedIn, upload.single("image"), async (req, res) => {
   const { email } = req.user;
 
@@ -327,6 +311,8 @@ app.post("/edit/:id", isLoggedIn, isMyPost, async (req, res) => {
   if (content === "") return res.redirect("/profile");
 
   try {
+    const user = await userModel.findOne({ email: req.user.email });
+
     const post = await postModel.findOne({ _id: id });
     post.content = content;
     post.date = Date.now();
@@ -334,7 +320,8 @@ app.post("/edit/:id", isLoggedIn, isMyPost, async (req, res) => {
     post.likes.splice(0, post.likes.length);
     await post.save();
 
-    res.redirect("/profile");
+    if (user.isAdmin) return res.redirect("/feed");
+    else return res.redirect("/profile");
   } catch (err) {
     res.status(500).send("Internal Server Error");
   }
@@ -352,8 +339,25 @@ app.get("/delete/:id", isLoggedIn, isMyPost, async (req, res) => {
 
     const post = await postModel.findOneAndDelete({ _id: id });
 
-    res.redirect("/profile");
+    if (user.isAdmin) return res.redirect("/feed");
+    else return res.redirect("/profile");
   } catch (err) {
+    res.status(500).send("Internal Server Error");
+  }
+});
+
+app.post("/remove-profile-picture", isLoggedIn, async (req, res) => {
+  const { email } = req.user;
+
+  try {
+    const user = await userModel.findOne({ email });
+    if (!user) return res.status(404).send("User not found!");
+
+    user.image = Buffer.alloc(0);
+    user.save();
+
+    res.redirect("/profile");
+  } catch (error) {
     res.status(500).send("Internal Server Error");
   }
 });

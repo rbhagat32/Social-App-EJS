@@ -26,7 +26,7 @@
       </div>
 
       <div class="flex flex-col gap-5 items-center mt-5">
-        <div class="w-40 h-40 rounded-full overflow-hidden">
+        <div class="size-44 sm:size-60 rounded-full overflow-hidden">
           <img
             class="w-full h-full object-cover object-top"
             src="<%= user.image.toString('base64') !== '' ? 
@@ -35,19 +35,19 @@
           />
         </div>
 
-        <div>
+        <div class="flex flex-col items-center">
           <h1 class="text-4xl">
-            <span class="text-xl text-zinc-400">Welcome, </span><%=
-            user.name.split(" ")[0] %> <% if (user.isVerified) { %>
+            <%= user.name %> <% if (user.isVerified) { %>
             <div class="w-4 h-4 inline-block relative right-1">
               <img src="/images/verified.png" />
             </div>
             <% } %>
           </h1>
+          <h2 class="text-blue-400">@<%= user.username %></h2>
         </div>
       </div>
 
-      <div class="flex flex-col items-center mt-5">
+      <div class="flex flex-col items-center mt-8">
         <form
           method="post"
           action="/profile"
