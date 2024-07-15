@@ -14,10 +14,16 @@ body {
   font-family: "Gilroy-Light", sans-serif;
 }
 
+img {
+  pointer-events: none;
+  user-select: none;
+}
+
 .font-semibold {
   font-family: "Gilroy-Bold", sans-serif;
 }
 
+/* Scrollbar */
 ::-webkit-scrollbar {
   width: 4px;
 }
