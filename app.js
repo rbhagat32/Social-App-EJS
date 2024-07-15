@@ -17,7 +17,7 @@ import upload from "./config/multer-config.js";
 const app = express();
 
 dotenv.config();
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 3000;
 const JWT_SECRET_KEY = process.env.JWT_SECRET_KEY;
 const JWT_EXPIRY = process.env.JWT_EXPIRY;
 
