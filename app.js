@@ -337,17 +337,26 @@ app.post("/edit/:id", isLoggedIn, isMyPost, async (req, res) => {
 
 app.get("/delete/:id", isLoggedIn, isMyPost, async (req, res) => {
   const { id } = req.params;
-  const { userId } = req.user;
+  const { email } = req.user;
 
   try {
+    // finding post
+    const post = await postModel.findOne({ _id: id });
+
+    // finding the owner of that post and removing the post from his posts array
+    const userId = post.user.toString();
     const user = await userModel.findOne({ _id: userId });
-    const postIndexInUserKaPostsArray = user.posts.indexOf(id);
-    user.posts.splice(postIndexInUserKaPostsArray, 1);
+    const postIndex = user.posts.indexOf(id);
+    user.posts.splice(postIndex, 1);
     user.save();
 
-    const post = await postModel.findOneAndDelete({ _id: id });
+    // deleting post
+    await postModel.findOneAndDelete({ _id: id });
 
-    if (user.isAdmin) return res.redirect("/feed");
+    // finding logged in user
+    const loggedInUser = await userModel.findOne({ email });
+
+    if (loggedInUser.isAdmin) return res.redirect("/feed");
     else return res.redirect("/profile");
   } catch (err) {
     res.status(500).send("Internal Server Error");
