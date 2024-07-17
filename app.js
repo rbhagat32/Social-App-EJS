@@ -136,11 +136,13 @@ app.post("/signup", upload.single("image"), async (req, res) => {
           expiresIn: JWT_EXPIRY,
         }
       );
+
       res.cookie("token", token, {
         httpOnly: true,
         sameSite: "strict",
         expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7), // expires after 1 week
       });
+
       res.redirect("/feed");
     });
   } catch (err) {
@@ -194,7 +196,7 @@ app.post("/login", async (req, res) => {
   }
 });
 
-app.get("/logout", (req, res) => {
+app.get("/logout", isLoggedIn, (req, res) => {
   res.cookie("token", "");
   res.redirect("/");
 });
