@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const postSchema = new mongoose.Schema({
+const postSchema = mongoose.Schema({
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "user",
@@ -21,4 +21,4 @@ const postSchema = new mongoose.Schema({
   },
 });
 
-export const postModel = mongoose.model("post", postSchema);
+export default mongoose.model("post", postSchema);
