@@ -5,16 +5,21 @@ const postSchema = mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "user",
   },
+
   date: {
     type: Date,
     default: Date.now,
   },
+
   content: {
     type: String,
     default: "",
   },
+
   likes: [{ type: mongoose.Schema.Types.ObjectId, ref: "user" }],
+
   image: Buffer,
+
   editted: {
     type: Boolean,
     default: false,
