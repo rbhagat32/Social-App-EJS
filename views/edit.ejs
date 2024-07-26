@@ -51,7 +51,10 @@
           >
 <%= post.content %></textarea
           >
-          <div class="flex gap-4 items-center justify-end">
+          <div class="flex gap-4 items-start justify-between">
+            <p class="text-xs text-red-400">
+              *editing the post will reset it's likes to 0
+            </p>
             <input
               type="submit"
               value="Update Post"
