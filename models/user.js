@@ -9,13 +9,6 @@ const userSchema = mongoose.Schema({
 
   password: String,
 
-  posts: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "post",
-    },
-  ],
-
   image: Buffer,
 
   isAdmin: {
@@ -27,6 +20,20 @@ const userSchema = mongoose.Schema({
     type: Boolean,
     default: false,
   },
+
+  posts: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "post",
+    },
+  ],
+
+  likedPosts: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "post",
+    },
+  ],
 });
 
 export default mongoose.model("user", userSchema);

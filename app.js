@@ -273,17 +273,29 @@ app.get("/delete-account", isLoggedIn, async (req, res) => {
   const { email } = req.user;
 
   try {
-    const user = await userModel.findOne({
-      email,
-    });
+    const user = await userModel.findOne({ email }).populate("likedPosts");
     if (!user) return res.status(404).send("User not found!");
 
+    // remove the user from likes array of all posts he has liked
+    for (let i = 0; i < user.likedPosts.length; i++) {
+      const post = await postModel.findOne({ _id: user.likedPosts[i]._id });
+      const indexOfUserInLikesArray = post.likes.indexOf(user._id);
+      if (indexOfUserInLikesArray !== -1) {
+        post.likes.splice(indexOfUserInLikesArray, 1);
+        await post.save();
+      }
+    }
+
+    // remove all posts of the user
     await postModel.deleteMany({ user: user._id });
+
+    // delete the user
     await userModel.findOneAndDelete({ email });
 
     res.cookie("token", "");
     res.redirect("/");
   } catch (err) {
+    console.log(err);
     res.status(500).send("Internal Server Error");
   }
 });
@@ -325,15 +337,24 @@ app.get("/like/:id", isLoggedIn, async (req, res) => {
 
   try {
     const post = await postModel.findOne({ _id: id }).populate("user");
+    const loggedInUser = await userModel.findOne({ _id: userId });
 
+    // add post to user's likedPosts array
+    const indexOfPostInLikedPostsArray = loggedInUser.likedPosts.indexOf(id);
+    if (indexOfPostInLikedPostsArray === -1) loggedInUser.likedPosts.push(id);
+    else {
+      loggedInUser.likedPosts.splice(indexOfPostInLikedPostsArray, 1);
+    }
+    await loggedInUser.save();
+
+    // add user to post's likes array
     const indexOfUserInLikesArray = post.likes.indexOf(userId);
     if (indexOfUserInLikesArray === -1) post.likes.push(userId);
     else {
       post.likes.splice(indexOfUserInLikesArray, 1);
     }
-
     await post.save();
-    // res.redirect("/feed");
+
     res.redirect(req.get("Referer"));
   } catch (err) {
     res.status(500).send("Internal Server Error");
@@ -362,12 +383,25 @@ app.post("/edit/:id", isLoggedIn, isMyPost, async (req, res) => {
 
   try {
     const user = await userModel.findOne({ email: req.user.email });
-
     const post = await postModel.findOne({ _id: id });
+
     post.content = content;
     post.date = Date.now();
     post.editted = true;
+
+    // remove all likes from the post if it is editted
     post.likes.splice(0, post.likes.length);
+
+    // remove the post from all users likedPosts array
+    const users = await userModel.find();
+    for (let i = 0; i < users.length; i++) {
+      const indexOfPostInLikedPostsArray = users[i].likedPosts.indexOf(id);
+      if (indexOfPostInLikedPostsArray !== -1) {
+        users[i].likedPosts.splice(indexOfPostInLikedPostsArray, 1);
+        await users[i].save();
+      }
+    }
+
     await post.save();
 
     if (user.isAdmin) return res.redirect("/feed");
@@ -391,6 +425,16 @@ app.get("/delete/:id", isLoggedIn, isMyPost, async (req, res) => {
     const postIndex = user.posts.indexOf(id);
     user.posts.splice(postIndex, 1);
     user.save();
+
+    // finding all users who have liked that post and removing the post from their likedPosts array
+    const users = await userModel.find();
+    for (let i = 0; i < users.length; i++) {
+      const indexOfPostInLikedPostsArray = users[i].likedPosts.indexOf(id);
+      if (indexOfPostInLikedPostsArray !== -1) {
+        users[i].likedPosts.splice(indexOfPostInLikedPostsArray, 1);
+        await users[i].save();
+      }
+    }
 
     // deleting post
     await postModel.findOneAndDelete({ _id: id });
