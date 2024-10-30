@@ -120,30 +120,22 @@ export const deletePost = async (req, res) => {
   try {
     // finding post
     const post = await postModel.findOne({ _id: id });
+    if (!post) return res.status(404).send("Post not found.");
 
-    // finding the owner of that post and removing the post from his posts array
-    const userId = post.user.toString();
-    const user = await userModel.findOne({ _id: userId });
-    const postIndex = user.posts.indexOf(id);
-    user.posts.splice(postIndex, 1);
-    user.save();
+    // removing the post from the owner's posts array
+    await userModel.findByIdAndUpdate(post.user, { $pull: { posts: id } });
 
-    // finding all users who have liked that post and removing the post from their likedPosts array
-    const users = await userModel.find();
-    for (let i = 0; i < users.length; i++) {
-      const indexOfPostInLikedPostsArray = users[i].likedPosts.indexOf(id);
-      if (indexOfPostInLikedPostsArray !== -1) {
-        users[i].likedPosts.splice(indexOfPostInLikedPostsArray, 1);
-        await users[i].save();
-      }
-    }
+    // Removing the post from other users' likedPosts arrays
+    await userModel.updateMany(
+      { likedPosts: id },
+      { $pull: { likedPosts: id } }
+    );
 
-    // deleting post
+    // Deleting the post
     await postModel.findOneAndDelete({ _id: id });
 
-    // finding logged in user
+    // finding the logged-in user and redirecting to his feed
     const loggedInUser = await userModel.findOne({ email });
-
     if (loggedInUser.isAdmin) return res.redirect("/feed");
     else return res.redirect("/profile");
   } catch (err) {
