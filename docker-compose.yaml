@@ -1,0 +1,24 @@
+services:
+  backend-image:
+    container_name: backend-container
+    # image: social-ejs-backend
+    build: . #build the image from Dockerfile in current directory
+    ports:
+      - 3000:3000
+    env_file:
+      - .env
+
+    # both methods can be used to enable hot reloading
+    # volumes:
+    #   - .:/app
+    #   - /app/node_modules
+
+    # but this is better as the above method creates volume and takes up storage on hard disk
+    develop:
+      watch:
+        - action: sync
+          path: . #path of directory to watch (. in this case)
+          target: /app #path of directory to sync to -> /app directory in container (same as WORKDIR in Dockerfile)
+          ignore: "node_modules" #ignore node_modules directory from watch
+        - action: rebuild #rebuild the container when package.json changes
+          path: package.json
