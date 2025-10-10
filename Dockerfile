@@ -19,6 +19,9 @@ COPY . .
 # because everything till the COPY . . layer is cached
 
 EXPOSE 3000
+# The EXPOSE instruction does not actually publish the port.
+# It functions as a type of documentation between the person who builds the image and the person who runs the container,
+# about which ports are reqd to be exposed. 
 
 # all above files are run when the image is built
 # the below CMD command is run when the container is started from the image
