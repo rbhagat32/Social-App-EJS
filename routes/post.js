@@ -1,6 +1,5 @@
 import Router from "express";
-const router = Router();
-
+import upload from "../config/multer-config.js";
 import {
   createPost,
   deletePost,
@@ -10,20 +9,14 @@ import {
 } from "../controllers/post.js";
 import { isLoggedIn } from "../middlewares/auth.js";
 import { isMyPost } from "../middlewares/post.js";
-import upload from "../config/multer-config.js";
 
-// Create a new post
+const router = Router();
+
 router.post("/post", isLoggedIn, upload.single("image"), createPost);
-
-// Like a post
 router.get("/like/:id", isLoggedIn, likePost);
-
-// Edit a post
 router
   .get("/edit/:id", isLoggedIn, isMyPost, editPage)
   .post("/edit/:id", isLoggedIn, isMyPost, editPost);
-
-// Delete a post
 router.get("/delete/:id", isLoggedIn, isMyPost, deletePost);
 
-export default router;
+export { router as PostRouter };

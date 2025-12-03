@@ -1,13 +1,11 @@
 {
-  "name": "authentication-proper",
+  "name": "social-app-ejs",
   "version": "1.0.0",
   "main": "app.js",
   "type": "module",
   "scripts": {
     "start": "node app.js",
-    "dev": "nodemon app.js",
-    "docker": "docker compose up",
-    "docker:dev": "docker compose up --watch"
+    "dev": "nodemon app.js"
   },
   "keywords": [],
   "author": "Raghav Bhagat",

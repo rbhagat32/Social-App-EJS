@@ -1,9 +1,7 @@
-import userModel from "../models/user.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import sharp from "sharp";
-import dotenv from "dotenv";
-dotenv.config();
+import userModel from "../models/user.js";
 
 export const homePage = async (req, res) => {
   const token = req.cookies.token;
