@@ -2,6 +2,7 @@ import express from "express";
 import path from "path";
 import { fileURLToPath } from "url";
 import cookieParser from "cookie-parser";
+import mongoose from "./config/mongoose-connection.js"
 import AuthRouter from "./routes/auth.js";
 import UserRouter from "./routes/user.js";
 import PostRouter from "./routes/post.js";
