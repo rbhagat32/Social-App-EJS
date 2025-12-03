@@ -1,5 +1,5 @@
 # this file is used to build the docker image for the app
-FROM node
+FROM node:20-alpine
 WORKDIR /app
 
 # copy package.json and package-lock.json to the working directory
