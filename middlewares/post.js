@@ -1,18 +1,18 @@
-import userModel from "../models/user.js";
-import postModel from "../models/post.js";
+import { PostModel } from "../models/post.js";
+import { UserModel } from "../models/user.js";
 
-export const isMyPost = async (req, res, next) => {
+const isMyPost = async (req, res, next) => {
   const { id } = req.params;
   const { userId } = req.user;
 
   try {
-    const user = await userModel.findOne({ _id: userId });
+    const user = await UserModel.findOne({ _id: userId });
     if (user.isAdmin) {
       next();
       return;
     }
 
-    const post = await postModel.findOne({ _id: id });
+    const post = await PostModel.findOne({ _id: id });
     if (post.user.toString() === userId) {
       next();
     } else {
@@ -22,3 +22,5 @@ export const isMyPost = async (req, res, next) => {
     res.status(500).send("Internal Server Error");
   }
 };
+
+export { isMyPost };

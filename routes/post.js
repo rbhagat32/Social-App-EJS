@@ -1,5 +1,5 @@
 import Router from "express";
-import upload from "../config/multer-config.js";
+import { multerUpload } from "../config/multer-config.js";
 import {
   createPost,
   deletePost,
@@ -12,7 +12,7 @@ import { isMyPost } from "../middlewares/post.js";
 
 const router = Router();
 
-router.post("/post", isLoggedIn, upload.single("image"), createPost);
+router.post("/post", isLoggedIn, multerUpload.single("image"), createPost);
 router.get("/like/:id", isLoggedIn, likePost);
 router
   .get("/edit/:id", isLoggedIn, isMyPost, editPage)

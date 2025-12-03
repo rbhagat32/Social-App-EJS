@@ -1,5 +1,5 @@
 import Router from "express";
-import upload from "../config/multer-config.js";
+import { multerUpload } from "../config/multer-config.js";
 import {
   changeProfilePicture,
   deleteAccount,
@@ -15,7 +15,12 @@ const router = Router();
 router.get("/feed", isLoggedIn, feedPage);
 router
   .get("/profile", isLoggedIn, getMyProfile)
-  .post("/profile", isLoggedIn, upload.single("image"), changeProfilePicture);
+  .post(
+    "/profile",
+    isLoggedIn,
+    multerUpload.single("image"),
+    changeProfilePicture
+  );
 router.get("/user-profile/:id", isLoggedIn, getOtherUserProfile);
 router.get("/delete-account", isLoggedIn, deleteAccount);
 router.post("/remove-profile-picture", isLoggedIn, removeProfilePicture);

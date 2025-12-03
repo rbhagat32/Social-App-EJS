@@ -1,5 +1,5 @@
 import Router from "express";
-import upload from "../config/multer-config.js";
+import { multerUpload } from "../config/multer-config.js";
 import {
   homePage,
   loginPage,
@@ -15,7 +15,7 @@ const router = Router();
 router.get("/", homePage);
 router
   .get("/signup", signupPage)
-  .post("/signup", upload.single("image"), signupNewUser);
+  .post("/signup", multerUpload.single("image"), signupNewUser);
 router.get("/login", loginPage).post("/login", loginUser);
 router.get("/logout", isLoggedIn, logoutUser);
 

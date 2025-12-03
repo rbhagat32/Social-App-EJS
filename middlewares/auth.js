@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 
-export const isLoggedIn = (req, res, next) => {
+const isLoggedIn = (req, res, next) => {
   const token = req.cookies.token;
 
   if (!token) return res.redirect("/");
@@ -19,3 +19,5 @@ export const isLoggedIn = (req, res, next) => {
     }
   }
 };
+
+export { isLoggedIn };

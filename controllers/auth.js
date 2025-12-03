@@ -1,16 +1,16 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import sharp from "sharp";
-import userModel from "../models/user.js";
+import { UserModel } from "../models/user.js";
 
-export const homePage = async (req, res) => {
+const homePage = async (req, res) => {
   const token = req.cookies.token;
 
   if (!token) return res.render("home");
 
   try {
     const { email } = jwt.verify(token, process.env.JWT_SECRET_KEY);
-    const user = await userModel.findOne({ email });
+    const user = await UserModel.findOne({ email });
     if (user) return res.redirect("/feed");
   } catch (err) {
     if (err.name === "TokenExpiredError") {
@@ -20,14 +20,14 @@ export const homePage = async (req, res) => {
   res.render("home");
 };
 
-export const signupPage = async (req, res) => {
+const signupPage = async (req, res) => {
   const token = req.cookies.token;
 
   if (!token) return res.render("signup");
 
   try {
     const { email } = jwt.verify(token, process.env.JWT_SECRET_KEY);
-    const user = await userModel.findOne({ email });
+    const user = await UserModel.findOne({ email });
     if (user) return res.redirect("/feed");
   } catch (err) {
     if (err.name === "TokenExpiredError") {
@@ -37,25 +37,25 @@ export const signupPage = async (req, res) => {
   res.render("signup");
 };
 
-export const signupNewUser = async (req, res) => {
+const signupNewUser = async (req, res) => {
   const { name, username, email, password } = req.body;
   let image = req.file
     ? await sharp(req.file.buffer).resize(200, 200).png().toBuffer()
     : Buffer.alloc(0);
 
   try {
-    const existingEmail = await userModel.findOne({ email });
+    const existingEmail = await UserModel.findOne({ email });
     if (existingEmail)
       return res.status(500).send("Email is already signuped!");
 
-    const existingUsername = await userModel.findOne({ username });
+    const existingUsername = await UserModel.findOne({ username });
     if (existingUsername)
       return res.status(500).send("Username is already taken!");
 
     bcrypt.hash(password, 10, async (err, hash) => {
       if (err) return res.status(500).send("Error hashing password");
 
-      const newUser = await userModel.create({
+      const newUser = await UserModel.create({
         name,
         username,
         email,
@@ -84,14 +84,14 @@ export const signupNewUser = async (req, res) => {
   }
 };
 
-export const loginPage = async (req, res) => {
+const loginPage = async (req, res) => {
   const token = req.cookies.token;
 
   if (!token) return res.render("login");
 
   try {
     const { email } = jwt.verify(token, process.env.JWT_SECRET_KEY);
-    const user = await userModel.findOne({ email });
+    const user = await UserModel.findOne({ email });
     if (user) return res.redirect("/feed");
   } catch (err) {
     if (err.name === "TokenExpiredError") {
@@ -101,11 +101,11 @@ export const loginPage = async (req, res) => {
   res.render("login");
 };
 
-export const loginUser = async (req, res) => {
+const loginUser = async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    const user = await userModel.findOne({ email });
+    const user = await UserModel.findOne({ email });
     if (!user) return res.status(500).send("User doesn't exist!");
 
     bcrypt.compare(password, user.password, (err, result) => {
@@ -134,7 +134,16 @@ export const loginUser = async (req, res) => {
   }
 };
 
-export const logoutUser = (req, res) => {
+const logoutUser = (req, res) => {
   res.cookie("token", "");
   res.redirect("/");
+};
+
+export {
+  homePage,
+  loginPage,
+  loginUser,
+  logoutUser,
+  signupNewUser,
+  signupPage,
 };
